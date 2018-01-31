@@ -75,6 +75,7 @@ from keras.layers import Flatten, Dense, Lambda
 from keras.layers import Conv2D
 from keras.layers.pooling import MaxPooling2D
 from keras.layers import Cropping2D
+from keras.layers import Dropout
 
 # simplest model
 # model = Sequential()
@@ -105,8 +106,11 @@ model.add(Lambda(lambda x:x / 255.0 - 0.5, input_shape=(160, 320, 3)))
 model.add(Cropping2D(cropping=((70, 25), (0, 0))))
 
 model.add(Conv2D(filters=24, kernel_size=(5,5), strides=(2, 2), padding='valid', activation='relu'))
+model.add(Dropout(0.2))
 model.add(Conv2D(filters=36, kernel_size=(5,5), strides=(2, 2), padding='valid', activation='relu'))
+model.add(Dropout(0.2))
 model.add(Conv2D(filters=48, kernel_size=(5,5), strides=(2, 2), padding='valid', activation='relu'))
+model.add(Dropout(0.2))
 
 model.add(Conv2D(filters=64, kernel_size=(3, 3), activation='relu'))
 model.add(Conv2D(filters=64, kernel_size=(3, 3), activation='relu'))
