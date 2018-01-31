@@ -23,14 +23,17 @@ images = []
 measurements = []
 correction = 0.2
 for i, line in enumerate(lines):
+    corr_array = [0, correction, -correction]
+    measurement = float(line[3])
     for j in range(3):
         source_path = line[j]
         _, fn = os.path.split(source_path)
         current_path = os.path.join(driving_log_dir, 'IMG', fn)
         image = cv2.imread(current_path, 1)
         images.append(image)
-        measurement = float(line[3])
-        measurements.append(measurement + (j - 1) * correction)
+        images.append(np.fliplr(image))
+        measurements.append(measurement + corr_array[j])
+        measurements.append(-measurement - corr_array[j])
     if i % 200 == 0:
         print "[read images] %5d/%5d " % (i, len(lines))
 
@@ -45,6 +48,7 @@ from keras.models import Sequential
 from keras.layers import Flatten, Dense, Lambda
 from keras.layers import Conv2D
 from keras.layers.pooling import MaxPooling2D
+from keras.layers import Cropping2D
 
 # simplest model
 # model = Sequential()
@@ -58,6 +62,7 @@ from keras.layers.pooling import MaxPooling2D
 
 model = Sequential()
 model.add(Lambda(lambda x:x / 255.0 - 0.5, input_shape=(160, 320, 3)))
+model.add(Cropping2D(cropping=((70, 25), (0, 0))))
 model.add(Conv2D(filters=6, kernel_size=(5,5), padding='valid', activation='tanh'))
 model.add(MaxPooling2D(pool_size=(2,2)))
 model.add(Conv2D(filters=6, kernel_size=(5,5), padding='valid', activation='tanh'))
@@ -70,7 +75,7 @@ model.add(Dense(1))
 
 model.compile(loss='mse', optimizer='adam')
 print "[-----compile finished-----]"
-model.fit(X_train, y_train, validation_split=0.2, shuffle=True, epochs=10)
+model.fit(X_train, y_train, validation_split=0.2, shuffle=True, epochs=4)
 print "[----- train finised-----]"
 model.save('model.h5')
 
