@@ -19,25 +19,25 @@ with open(driving_log_fn) as fd:
 
 print "[----open file success!----]", driving_log_fn
 
-images = np.zeros((len(lines) * 2, 160, 320, 3), dtype=np.uint8)
-measurements = np.zeros(len(lines)*2) 
+images = []
+measurements = []
+correction = 0.2
 for i, line in enumerate(lines):
-    source_path = line[0]
-    _, fn = os.path.split(source_path)
-    current_path = os.path.join(driving_log_dir, 'IMG', fn)
-    image = cv2.imread(current_path, 1)
-    images[i*2] = image
-    images[i*2 + 1] = np.fliplr(image)
-    measurement = float(line[3])
-    measurements[i*2] = measurement
-    measurements[i*2 + 1] = -measurement
-    if i % 1000 == 0:
+    for j in range(3):
+        source_path = line[j]
+        _, fn = os.path.split(source_path)
+        current_path = os.path.join(driving_log_dir, 'IMG', fn)
+        image = cv2.imread(current_path, 1)
+        images.append(image)
+        measurement = float(line[3])
+        measurements.append(measurement + (j - 1) * correction)
+    if i % 200 == 0:
         print "[read images] %5d/%5d " % (i, len(lines))
 
 print "[-----read images finised-----]"
 
-X_train = images
-y_train = measurements
+X_train = np.array(images)
+y_train = np.array(measurements)
 print "[----- transform to numpy array ok-----]"
 
 
