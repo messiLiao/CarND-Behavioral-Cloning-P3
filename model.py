@@ -60,16 +60,34 @@ from keras.layers import Cropping2D
 # model.fit(X_train, y_train, validation_split=0.2, shuffle=True, epochs=10)
 # print "[----- train finised-----]"
 
+# Lenet
+# model = Sequential()
+# model.add(Lambda(lambda x:x / 255.0 - 0.5, input_shape=(160, 320, 3)))
+# model.add(Cropping2D(cropping=((70, 25), (0, 0))))
+# model.add(Conv2D(filters=6, kernel_size=(5,5), padding='valid', activation='tanh'))
+# model.add(MaxPooling2D(pool_size=(2,2)))
+# model.add(Conv2D(filters=6, kernel_size=(5,5), padding='valid', activation='tanh'))
+# model.add(MaxPooling2D(pool_size=(2,2)))
+# model.add(Flatten())
+# model.add(Dense(120))
+# model.add(Dense(84))
+# model.add(Dense(10))
+# model.add(Dense(1))
+
 model = Sequential()
 model.add(Lambda(lambda x:x / 255.0 - 0.5, input_shape=(160, 320, 3)))
 model.add(Cropping2D(cropping=((70, 25), (0, 0))))
-model.add(Conv2D(filters=6, kernel_size=(5,5), padding='valid', activation='tanh'))
-model.add(MaxPooling2D(pool_size=(2,2)))
-model.add(Conv2D(filters=6, kernel_size=(5,5), padding='valid', activation='tanh'))
-model.add(MaxPooling2D(pool_size=(2,2)))
+
+model.add(Conv2D(filters=24, kernel_size=(5,5), subsample=(2, 2), padding='valid', activation='relu'))
+model.add(Conv2D(filters=36, kernel_size=(5,5), subsample=(2, 2), padding='valid', activation='relu'))
+model.add(Conv2D(filters=48, kernel_size=(5,5), subsample=(2, 2), padding='valid', activation='relu'))
+
+model.add(Conv2D(filters=64, kernel_size=(3, 3), activation='relu'))
+model.add(Conv2D(filters=64, kernel_size=(3, 3), activation='relu'))
+
 model.add(Flatten())
-model.add(Dense(120))
-model.add(Dense(84))
+model.add(Dense(100))
+model.add(Dense(50))
 model.add(Dense(10))
 model.add(Dense(1))
 
