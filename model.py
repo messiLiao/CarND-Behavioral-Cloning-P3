@@ -7,42 +7,70 @@ import csv
 import cv2
 import numpy as np
 import keras
+import sklearn
+import random
 
 lines = []
-driving_log_dir = os.path.join(os.getenv("HOME"), 'Downloads/linux_sim/record_data' )
-driving_log_fn = os.path.join(driving_log_dir, 'driving_log.csv')
 
-with open(driving_log_fn) as fd:
-    reader = csv.reader(fd)
-    for line in reader:
-        lines.append(line)
+data_dirs = ['track_01_ccw', 'track_01_cw', 'track_02_ccw', 'track_02_cw']
+for _dir in data_dirs:
+    driving_log_dir = os.path.join(os.getenv("HOME"), 'Downloads/linux_sim', _dir )
+    driving_log_fn = os.path.join(driving_log_dir, 'driving_log.csv')
+    if not os.path.isfile(driving_log_fn):
+        continue
+    print driving_log_fn
+    with open(driving_log_fn) as fd:
+        reader = csv.reader(fd)
+        for line in reader:
+            lines.append(line)
 
 print "[----open file success!----]", driving_log_fn
 
-images = []
-measurements = []
-correction = 0.2
-for i, line in enumerate(lines):
-    corr_array = [0, correction, -correction]
-    measurement = float(line[3])
-    for j in range(3):
-        source_path = line[j]
-        _, fn = os.path.split(source_path)
-        current_path = os.path.join(driving_log_dir, 'IMG', fn)
-        image = cv2.imread(current_path, 1)
-        images.append(image)
-        images.append(np.fliplr(image))
-        measurements.append(measurement + corr_array[j])
-        measurements.append(-measurement - corr_array[j])
-    if i % 200 == 0:
-        print "[read images] %5d/%5d " % (i, len(lines))
+def sample_generator(samples, batch_size=32):
+    correction = 0.2
+    num_samples = len(samples)
+    while True:
+        samples = sklearn.utils.shuffle(samples)
+        for offset in range(0, num_samples, batch_size):
+            batch_samples = samples[offset:offset+batch_size]
+
+            images = []
+            measurements = []
+            for i, line in enumerate(batch_samples):
+                corr_array = [0, correction, -correction]
+                measurement = float(line[3])
+                for j in range(3):
+                    source_path = line[j]
+                    _ = source_path.split('/')
+                    current_path = os.path.join(os.getenv("HOME"), '/'.join(_[3:]))
+                    image = cv2.imread(current_path, 1)
+                    images.append(image)
+                    images.append(np.fliplr(image))
+                    measurements.append(measurement + corr_array[j])
+                    measurements.append(-measurement - corr_array[j])
+            X_train = np.array(images)
+            y_train = np.array(measurements)
+            yield sklearn.utils.shuffle(X_train, y_train)
 
 print "[-----read images finised-----]"
 
-X_train = np.array(images)
-y_train = np.array(measurements)
-print "[----- transform to numpy array ok-----]"
+validation_split = 0.2
+# compile and train the model using the generator function
+train_samples = []
+validation_samples = []
+for line in lines:
+    if random.random() <= validation_split:
+        validation_samples.append(line)
+    else:
+        train_samples.append(line)
 
+print len(train_samples), len(validation_samples)
+
+train_generator = sample_generator(train_samples, batch_size=32)
+validation_generator = sample_generator(validation_samples, batch_size=32)
+test_gen = next(train_generator)
+print test_gen[0].shape
+print test_gen[1].shape
 
 from keras.models import Sequential
 from keras.layers import Flatten, Dense, Lambda
@@ -93,7 +121,7 @@ model.add(Dense(1))
 
 model.compile(loss='mse', optimizer='adam')
 print "[-----compile finished-----]"
-model.fit(X_train, y_train, validation_split=0.2, shuffle=True, epochs=4)
+model.fit_generator(train_generator, samples_per_epoch=len(train_samples), validation_data=validation_generator, nb_val_samples=len(validation_samples), epochs=3)
 print "[----- train finised-----]"
 model.save('model.h5')
 
