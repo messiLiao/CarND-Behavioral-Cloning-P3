@@ -24,7 +24,7 @@ for _dir in data_dirs:
         for line in reader:
             lines.append(line)
 
-print "[----open file success!----]", driving_log_fn
+print "total samples:", len(lines)
 
 def sample_generator(samples, batch_size=32):
     correction = 0.2
@@ -64,13 +64,11 @@ for line in lines:
     else:
         train_samples.append(line)
 
-print len(train_samples), len(validation_samples)
+print "total train samples:", len(train_samples), "total validation samples:", len(validation_samples)
 
-train_generator = sample_generator(train_samples, batch_size=32)
-validation_generator = sample_generator(validation_samples, batch_size=32)
-test_gen = next(train_generator)
-print test_gen[0].shape
-print test_gen[1].shape
+batch_size = 32
+train_generator = sample_generator(train_samples, batch_size=batch_size)
+validation_generator = sample_generator(validation_samples, batch_size=batch_size)
 
 from keras.models import Sequential
 from keras.layers import Flatten, Dense, Lambda
@@ -106,9 +104,9 @@ model = Sequential()
 model.add(Lambda(lambda x:x / 255.0 - 0.5, input_shape=(160, 320, 3)))
 model.add(Cropping2D(cropping=((70, 25), (0, 0))))
 
-model.add(Conv2D(filters=24, kernel_size=(5,5), subsample=(2, 2), padding='valid', activation='relu'))
-model.add(Conv2D(filters=36, kernel_size=(5,5), subsample=(2, 2), padding='valid', activation='relu'))
-model.add(Conv2D(filters=48, kernel_size=(5,5), subsample=(2, 2), padding='valid', activation='relu'))
+model.add(Conv2D(filters=24, kernel_size=(5,5), strides=(2, 2), padding='valid', activation='relu'))
+model.add(Conv2D(filters=36, kernel_size=(5,5), strides=(2, 2), padding='valid', activation='relu'))
+model.add(Conv2D(filters=48, kernel_size=(5,5), strides=(2, 2), padding='valid', activation='relu'))
 
 model.add(Conv2D(filters=64, kernel_size=(3, 3), activation='relu'))
 model.add(Conv2D(filters=64, kernel_size=(3, 3), activation='relu'))
@@ -121,7 +119,7 @@ model.add(Dense(1))
 
 model.compile(loss='mse', optimizer='adam')
 print "[-----compile finished-----]"
-model.fit_generator(train_generator, samples_per_epoch=len(train_samples), validation_data=validation_generator, nb_val_samples=len(validation_samples), epochs=3)
+model.fit_generator(train_generator, steps_per_epoch=len(train_samples)/batch_size, validation_data=validation_generator, validation_steps=len(validation_samples)/batch_size, epochs=6)
 print "[----- train finised-----]"
 model.save('model.h5')
 
