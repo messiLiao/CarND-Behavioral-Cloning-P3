@@ -18,13 +18,15 @@ The goals / steps of this project are the following:
 
 [//]: # (Image References)
 
-[image1]: ./examples/placeholder.png "Model Visualization"
-[image2]: ./examples/placeholder.png "Grayscaling"
-[image3]: ./examples/placeholder_small.png "Recovery Image"
-[image4]: ./examples/placeholder_small.png "Recovery Image"
-[image5]: ./examples/placeholder_small.png "Recovery Image"
+[image1]: ./examples/model.png "Model Visualization"
+[image2]: ./examples/center_origin.png "Grayscaling"
+[image3]: ./examples/center_origin.png "Center Image"
+[image4]: ./examples/left_origin.png "Left side Image"
+[image5]: ./examples/right_origin.png "Rigin side Image"
 [image6]: ./examples/placeholder_small.png "Normal Image"
 [image7]: ./examples/placeholder_small.png "Flipped Image"
+[image8]: ./examples/before_crop.png "Flipped Image"
+[image9]: ./examples/after_crop.png "Flipped Image"
 
 ## Rubric Points
 ### Here I will consider the [rubric points](https://review.udacity.com/#!/rubrics/432/view) individually and describe how I addressed each point in my implementation.  
@@ -114,14 +116,10 @@ I then recorded the vehicle recovering from the left side and right sides of the
 
 Then I repeated this process on track two in order to get more data points.
 
-To augment the data sat, I also flipped images and angles thinking that this would compat overfitting. For example, here is an image that has then been flipped:
+After the collection process, I had 13727 number of data points. I then preprocessed this data by normalization and cropping. Before and after cropping images are:
 
-![alt text][image6]
-![alt text][image7]
-
-
-After the collection process, I had 13727 number of data points. I then preprocessed this data only by normalization.
-
+![before cropping][image8]
+![after cropping][image9]
 
 I finally randomly shuffled the data set and put 20% of the data into a validation set. 
 
