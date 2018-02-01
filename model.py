@@ -36,18 +36,20 @@ def sample_generator(samples, batch_size=32):
 
             images = []
             measurements = []
+            corr_array = [0, correction, -correction]
             for i, line in enumerate(batch_samples):
-                corr_array = [0, correction, -correction]
                 measurement = float(line[3])
                 for j in range(3):
                     source_path = line[j]
                     _ = source_path.split('/')
                     current_path = os.path.join(os.getenv("HOME"), '/'.join(_[3:]))
                     image = cv2.imread(current_path, 1)
+                    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                     images.append(image)
                     images.append(np.fliplr(image))
-                    measurements.append(measurement + corr_array[j])
-                    measurements.append(-measurement - corr_array[j])
+                    meas = measurement + corr_array[j]
+                    measurements.append(meas)
+                    measurements.append(-meas)
             X_train = np.array(images)
             y_train = np.array(measurements)
             yield sklearn.utils.shuffle(X_train, y_train)
@@ -76,6 +78,7 @@ from keras.layers import Conv2D
 from keras.layers.pooling import MaxPooling2D
 from keras.layers import Cropping2D
 from keras.layers import Dropout
+from keras.utils import plot_model
 
 # simplest model
 # model = Sequential()
@@ -102,8 +105,8 @@ from keras.layers import Dropout
 # model.add(Dense(1))
 
 model = Sequential()
-model.add(Lambda(lambda x:x / 255.0 - 0.5, input_shape=(160, 320, 3)))
-model.add(Cropping2D(cropping=((70, 25), (0, 0))))
+model.add(Cropping2D(cropping=((70, 25), (0, 0)), input_shape=(160, 320, 3)))
+model.add(Lambda(lambda x:x / 255.0 - 0.5))
 
 model.add(Conv2D(filters=24, kernel_size=(5,5), strides=(2, 2), padding='valid', activation='relu'))
 model.add(Dropout(0.2))
@@ -121,7 +124,9 @@ model.add(Dense(50))
 model.add(Dense(10))
 model.add(Dense(1))
 
+
 model.compile(loss='mse', optimizer='adam')
+plot_model(model, to_file='model.png')
 print "[-----compile finished-----]"
 model.fit_generator(train_generator, steps_per_epoch=len(train_samples)/batch_size, validation_data=validation_generator, validation_steps=len(validation_samples)/batch_size, epochs=6)
 print "[----- train finised-----]"
