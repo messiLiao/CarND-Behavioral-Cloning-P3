@@ -1,7 +1,7 @@
 from set_gpu import get_session
 import keras.backend.tensorflow_backend as KTF
 res = KTF.set_session(get_session())
-print "set_gpu result:", res
+print ("set_gpu result:{}".format(res))
 import os
 import csv
 import cv2
@@ -18,13 +18,13 @@ for _dir in data_dirs:
     driving_log_fn = os.path.join(driving_log_dir, 'driving_log.csv')
     if not os.path.isfile(driving_log_fn):
         continue
-    print driving_log_fn
+    print (driving_log_fn)
     with open(driving_log_fn) as fd:
         reader = csv.reader(fd)
         for line in reader:
             lines.append(line)
 
-print "total samples:", len(lines)
+print ("total samples:{}".format(len(lines)))
 
 def sample_generator(samples, batch_size=32):
     correction = 0.2
@@ -54,7 +54,7 @@ def sample_generator(samples, batch_size=32):
             y_train = np.array(measurements)
             yield sklearn.utils.shuffle(X_train, y_train)
 
-print "[-----read images finised-----]"
+print ("[-----read images finised-----]")
 
 validation_split = 0.2
 # compile and train the model using the generator function
@@ -66,7 +66,7 @@ for line in lines:
     else:
         train_samples.append(line)
 
-print "total train samples:", len(train_samples), "total validation samples:", len(validation_samples)
+print ("total train samples:{0}, total validation samples:{1}".format(len(train_samples), len(validation_samples)))
 
 batch_size = 32
 train_generator = sample_generator(train_samples, batch_size=batch_size)
@@ -127,9 +127,9 @@ model.add(Dense(1))
 
 model.compile(loss='mse', optimizer='adam')
 plot_model(model, to_file='model.png')
-print "[-----compile finished-----]"
+print ("[-----compile finished-----]")
 model.fit_generator(train_generator, steps_per_epoch=len(train_samples)/batch_size, validation_data=validation_generator, validation_steps=len(validation_samples)/batch_size, epochs=6)
-print "[----- train finised-----]"
+print ("[----- train finised-----]")
 model.save('model.h5')
 
 
